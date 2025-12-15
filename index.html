@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker</title>
+  <style>
+    :root {
+      --primary: #FF6B35; /* Rapido orange */
+      --secondary: #FFD23F; /* Rapido yellow */
+      --bg: #f8f9fa;
+      --card: white;
+      --text: #333;
+      --border: #ddd;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; }
+    .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+    .section { background: var(--card); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    input, select, button { padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; }
+    button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+    button:hover { background: #e55a2b; transform: scale(1.02); }
+    .delete { background: #dc3545; font-size: 14px; padding: 5px 10px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--secondary); color: var(--text); }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    .due-alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    .edit-form { display: none; background: #e8f4f8; padding: 15px; border-radius: 8px; margin-top: 10px; }
+    @media (max-width: 600px) { .filters { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>💰 Finance Tracker</h1>
+    <p>Income | Expenses | Investments | Due Dates</p>
+  </div>
+
+  <!-- Income/Expense Form -->
+  <div class="section">
+    <h2>➕ Add Entry</h2>
+    <div class="form-grid">
+      <input type="date" id="date" required>
+      <select id="type" required><option value="">Type</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Share">Share Market</option><option value="MF">Mutual Fund</option><option value="LIC">LIC</option></select>
+      <input type="number" id="amount" placeholder="Amount (₹)" required>
+      <input type="text" id="desc" placeholder="Description">
+    </div>
+    <button onclick="addEntry()">Add Entry</button>
+    <button onclick="exportCSV()" style="background: var(--secondary);">📊 Export CSV</button>
+  </div>
+
+  <!-- Due Dates Form -->
+  <div class="section">
+    <h2>📅 Add Repayment</h2>
+    <div class="form-grid">
+      <input type="text" id="dueDesc" placeholder="EMI/Loan Name">
+      <input type="date" id="dueDate" required>
+      <input type="number" id="dueAmount" placeholder="Amount (₹)" required>
+    </div>
+    <button onclick="addDue()">Add Due Date</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <select id="monthFilter" onchange="renderAll()"><option value="">All Months</option></select>
+    <select id="typeFilter" onchange="renderAll()"><option value="">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Share">Share</option><option value="MF">MF</option><option value="LIC">LIC</option></select>
+    <button onclick="deleteAll()">🗑️ Delete All</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="section">
+    <h2>📊 Monthly Summary</h2>
+    <div class="summary" id="summary">
+      <!-- Dynamic stats -->
+    </div>
+  </div>
+
+  <!-- Upcoming Dues -->
+  <div class="section">
+    <h2>⚠️ Upcoming Dues</h2>
+    <div id="duesList"></div>
+  </div>
+
+  <!-- Entries Table -->
+  <div class="section">
+    <h2>📋 All Entries</h2>
+    <div id="entries"></div>
+  </div>
+
+  <script>
+    let entries = JSON.parse(localStorage.getItem('financeEntries')) || [];
+    let dues = JSON.parse(localStorage.getItem('financeDues')) || [];
+
+    function saveData() {
+      localStorage.setItem('financeEntries', JSON.stringify(entries));
+      localStorage.setItem('financeDues', JSON.stringify(dues));
+    }
+
+    function addEntry() {
+      const date = document.getElementById('date').value;
+      const type = document.getElementById('type').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const desc = document.getElementById('desc').value;
+      if (!date || !type || !amount) return alert('Fill all fields');
+      entries.push({ id: Date.now(), date, type, amount, desc });
+      saveData();
+      document.getElementById('date').value = '';
+      document.getElementById('type').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('desc').value = '';
+      renderAll();
+    }
+
+    function addDue() {
+      const desc = document.getElementById('dueDesc').value;
+      const date = document.getElementById('dueDate').value;
+      const amount = parseFloat(document.getElementById('dueAmount').value);
+      if (!desc || !date || !amount) return alert('Fill all fields');
+      dues.push({ id: Date.now(), desc, date, amount });
+      saveData();
+      document.getElementById('dueDesc').value = '';
+      document.getElementById('dueDate').value = '';
+      document.getElementById('dueAmount').value = '';
+      renderDues();
+    }
+
+    function getMonthYear(d) { return d.slice(0,7); }
+
+    function filterEntries() {
+      const monthFilter = document.getElementById('monthFilter').value;
+      const typeFilter = document.getElementById('typeFilter').value;
+      return entries.filter(e => 
+        (!monthFilter || getMonthYear(e.date) === monthFilter) &&
+        (!typeFilter || e.type === typeFilter)
+      );
+    }
+
+    function renderSummary(filtered) {
+      const income = filtered.filter(e => e.type === 'Income').reduce((sum, e) => sum + e.amount, 0);
+      const expense = filtered.filter(e => e.type === 'Expense').reduce((sum, e) => sum + e.amount, 0);
+      const investment = filtered.filter(e => ['Share','MF','LIC'].includes(e.type)).reduce((sum, e) => sum + e.amount, 0);
+      const balance = income - expense;
+      document.getElementById('summary').innerHTML = `
+        <div class="stat">Income<br>₹${income.toLocaleString()}</div>
+        <div class="stat">Expense<br>₹${expense.toLocaleString()}</div>
+        <div class="stat">Invest<br>₹${investment.toLocaleString()}</div>
+        <div class="stat">Balance<br>₹${balance.toLocaleString()}</div>
+      `;
+    }
+
+    function renderEntries(filtered) {
+      let html = '';
+      filtered.forEach(e => {
+        html += `
+          <tr>
+            <td>${new Date(e.date).toLocaleDateString('hi-IN')}</td>
+            <td>${e.type}</td>
+            <td>₹${e.amount.toLocaleString()}</td>
+            <td>${e.desc}</td>
+            <td><button class="delete" onclick="deleteEntry(${e.id})">Delete</button></td>
+          </tr>
+        `;
+      });
+      document.getElementById('entries').innerHTML = filtered.length ? `<table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Desc</th><th></th></tr>${html}</table>` : '<p>No entries</p>';
+    }
+
+    function renderDues() {
+      const today = new Date().toISOString().slice(0,10);
+      const upcoming = dues.filter(d => d.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
+      let html = upcoming.map(d => 
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:5px;">
+          <span>${d.desc} - ₹${d.amount.toLocaleString()} on ${new Date(d.date).toLocaleDateString('hi-IN')}</span>
+          <button class="delete" onclick="deleteDue(${d.id})">Delete</button>
+        </div>`
+      ).join('');
+      document.getElementById('duesList').innerHTML = upcoming.length ? html : '<p>No upcoming dues</p>';
+    }
+
+    function renderAll() {
+      const filtered = filterEntries();
+      renderSummary(filtered);
+      renderEntries(filtered);
+      populateFilters();
+    }
+
+    function populateFilters() {
+      const months = [...new Set(entries.map(getMonthYear))].sort().reverse();
+      const monthSel = document.getElementById('monthFilter');
+      monthSel.innerHTML = '<option value="">All Months</option>' + months.map(m => `<option value="${m}">${new Date(m+'-01').toLocaleDateString('hi-IN', {month:'long', year:'numeric'})}</option>`).join('');
+    }
+
+    function deleteEntry(id) {
+      entries = entries.filter(e => e.id !== id);
+      saveData();
+      renderAll();
+    }
+
+    function deleteDue(id) {
+      dues = dues.filter(d => d.id !== id);
+      saveData();
+      renderDues();
+    }
+
+    function deleteAll() {
+      if (confirm('Delete all data?')) {
+        entries = [];
+        dues = [];
+        saveData();
+        renderAll();
+        renderDues();
+      }
+    }
+
+    function exportCSV() {
+      const filtered = filterEntries();
+      const csv = 'Date,Type,Amount,Desc\n' + filtered.map(e => `${e.date},${e.type},${e.amount},"${e.desc}"`).join('\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `finance-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      populateFilters();
+      renderAll();
+      renderDues();
+    });
+  </script>
+</body>
+</html>
