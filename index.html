@@ -6,232 +6,582 @@
   <title>Finance Tracker</title>
   <style>
     :root {
-      --primary: #FF6B35; /* Rapido orange */
-      --secondary: #FFD23F; /* Rapido yellow */
-      --bg: #f8f9fa;
-      --card: white;
-      --text: #333;
-      --border: #ddd;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --accent: #f97316;
+      --bg: #e5f0ff;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --success: #16a34a;
+      --danger: #dc2626;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 10px; }
-    .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
-    .section { background: var(--card); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-    input, select, button { padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; }
-    button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: all 0.3s; }
-    button:hover { background: #e55a2b; transform: scale(1.02); }
-    .delete { background: #dc3545; font-size: 14px; padding: 5px 10px; }
-    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .stat { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: var(--secondary); color: var(--text); }
-    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-    .due-alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
-    .edit-form { display: none; background: #e8f4f8; padding: 15px; border-radius: 8px; margin-top: 10px; }
-    @media (max-width: 600px) { .filters { flex-direction: column; } }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #eff6ff 0, #e5f0ff 60%);
+      color: var(--text);
+      padding: 10px;
+      display:flex;
+      justify-content:center;
+    }
+    .app {
+      width:100%;
+      max-width:1100px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      color:#f9fafb;
+      padding:14px 16px;
+      border-radius:14px;
+      margin-bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      box-shadow:0 10px 25px rgba(37,99,235,0.35);
+    }
+    .header-left h1 {
+      font-size:1.2rem;
+      font-weight:700;
+      letter-spacing:0.03em;
+    }
+    .header-left p {
+      font-size:0.75rem;
+      opacity:0.9;
+      margin-top:2px;
+    }
+    .header-right {
+      text-align:right;
+      font-size:0.7rem;
+    }
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.1);
+      font-size:0.7rem;
+      font-weight:600;
+    }
+
+    .section {
+      background: var(--card);
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:12px;
+      box-shadow:0 8px 18px rgba(148,163,184,0.35);
+      border:1px solid var(--border);
+    }
+    .section h2 {
+      font-size:0.95rem;
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .section h2 span.icon {
+      font-size:1rem;
+    }
+
+    .form-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+    @media (max-width:700px){
+      .form-grid { grid-template-columns:1fr; }
+    }
+    input, select, button {
+      font-size:0.8rem;
+    }
+    input, select {
+      padding:7px 9px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      color:var(--text);
+      outline:none;
+      transition:all 0.15s ease;
+    }
+    input::placeholder { color:var(--muted); }
+    input:focus, select:focus {
+      border-color:var(--primary);
+      box-shadow:0 0 0 1px rgba(37,99,235,0.25);
+      background:#ffffff;
+    }
+
+    button {
+      border:none;
+      border-radius:999px;
+      padding:7px 13px;
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:0.02em;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:all 0.15s ease;
+    }
+    .btn-primary {
+      background:linear-gradient(135deg,#3b82f6,#2563eb);
+      color:#f9fafb;
+    }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(37,99,235,0.4); }
+    .btn-soft {
+      background:var(--primary-soft);
+      color:var(--primary);
+      border:1px solid #bfdbfe;
+    }
+    .btn-soft:hover { background:#bfdbfe; }
+    .btn-danger {
+      background:#fee2e2;
+      color:var(--danger);
+      border:1px solid #fecaca;
+      padding:4px 9px;
+      font-size:0.7rem;
+      border-radius:999px;
+    }
+    .btn-danger:hover { background:#fecaca; }
+    .btn-xs {
+      padding:3px 7px;
+      font-size:0.7rem;
+    }
+
+    .filters {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+      align-items:center;
+    }
+    .filters select { min-width:135px; }
+
+    .summary {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px;
+    }
+    @media (max-width:700px){
+      .summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    .stat {
+      padding:10px 10px;
+      border-radius:10px;
+      background:linear-gradient(145deg,#eff6ff,#ffffff);
+      border:1px solid #dbeafe;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .stat-label {
+      font-size:0.7rem;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.06em;
+    }
+    .stat-value {
+      font-size:0.9rem;
+      font-weight:700;
+      color:#111827;
+    }
+    .stat-tag {
+      font-size:0.7rem;
+      color:var(--success);
+    }
+    .stat-tag.negative { color:var(--danger); }
+
+    .due-card {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:7px 9px;
+      border-radius:9px;
+      background:#eff6ff;
+      border:1px solid #dbeafe;
+      margin-bottom:6px;
+      font-size:0.75rem;
+    }
+    .due-main span { display:block; }
+    .due-desc { font-weight:600; color:#111827; }
+    .due-meta { color:var(--muted); font-size:0.7rem; }
+
+    .table-wrapper {
+      width:100%;
+      overflow-x:auto;
+      border-radius:10px;
+      border:1px solid #dbeafe;
+      background:#f9fafb;
+    }
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:0.75rem;
+    }
+    th, td {
+      padding:7px 8px;
+      text-align:left;
+      border-bottom:1px solid #e5e7eb;
+      white-space:nowrap;
+    }
+    th {
+      background:#eef2ff;
+      color:#4b5563;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.06em;
+      font-size:0.68rem;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tr:nth-child(even) { background:#f9fafb; }
+    tr:hover td { background:#e0f2fe; }
+
+    .chip-type {
+      padding:2px 7px;
+      border-radius:999px;
+      font-size:0.65rem;
+      font-weight:600;
+    }
+    .chip-income { background:#dcfce7; color:#166534; }
+    .chip-expense { background:#fee2e2; color:#b91c1c; }
+    .chip-invest { background:#dbeafe; color:#1d4ed8; }
+
+    p { font-size:0.78rem; }
+    .muted { color:var(--muted); }
+
+    .empty-state {
+      font-size:0.78rem;
+      color:var(--muted);
+      padding:6px 2px;
+    }
   </style>
 </head>
 <body>
+<div class="app">
   <div class="header">
-    <h1>💰 Finance Tracker</h1>
-    <p>Income | Expenses | Investments | Due Dates</p>
+    <div class="header-left">
+      <h1>Finance Tracker</h1>
+      <p>Income • Expenses • Investments • Repayments</p>
+    </div>
+    <div class="header-right">
+      <div class="pill">📅 <span id="todayText"></span></div><br>
+      <span class="muted">Local · Offline · Private</span>
+    </div>
   </div>
 
-  <!-- Income/Expense Form -->
   <div class="section">
-    <h2>➕ Add Entry</h2>
+    <h2><span class="icon">➕</span> Add Entry</h2>
     <div class="form-grid">
       <input type="date" id="date" required>
-      <select id="type" required><option value="">Type</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Share">Share Market</option><option value="MF">Mutual Fund</option><option value="LIC">LIC</option></select>
+      <select id="type" required>
+        <option value="">Type</option>
+        <option value="Income">Income</option>
+        <option value="Expense">Expense</option>
+        <option value="Share">Share Market</option>
+        <option value="MF">Mutual Fund</option>
+        <option value="LIC">LIC</option>
+      </select>
       <input type="number" id="amount" placeholder="Amount (₹)" required>
       <input type="text" id="desc" placeholder="Description">
     </div>
-    <button onclick="addEntry()">Add Entry</button>
-    <button onclick="exportCSV()" style="background: var(--secondary);">📊 Export CSV</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="saveEntry()">Save Entry</button>
+      <button class="btn-soft" onclick="exportCSV()">📊 Export CSV</button>
+    </div>
   </div>
 
-  <!-- Due Dates Form -->
   <div class="section">
-    <h2>📅 Add Repayment</h2>
+    <h2><span class="icon">📅</span> Add Repayment</h2>
     <div class="form-grid">
-      <input type="text" id="dueDesc" placeholder="EMI/Loan Name">
+      <input type="text" id="dueDesc" placeholder="EMI / Loan Name">
       <input type="date" id="dueDate" required>
       <input type="number" id="dueAmount" placeholder="Amount (₹)" required>
     </div>
-    <button onclick="addDue()">Add Due Date</button>
+    <button class="btn-primary" onclick="addDue()">Save Due</button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters">
-    <select id="monthFilter" onchange="renderAll()"><option value="">All Months</option></select>
-    <select id="typeFilter" onchange="renderAll()"><option value="">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Share">Share</option><option value="MF">MF</option><option value="LIC">LIC</option></select>
-    <button onclick="deleteAll()">🗑️ Delete All</button>
-  </div>
-
-  <!-- Summary -->
-  <div class="section">
-    <h2>📊 Monthly Summary</h2>
-    <div class="summary" id="summary">
-      <!-- Dynamic stats -->
+  <div class="section" style="padding-bottom:10px;">
+    <div class="filters">
+      <select id="monthFilter" onchange="renderAll()">
+        <option value="">All Months</option>
+      </select>
+      <select id="typeFilter" onchange="renderAll()">
+        <option value="">All Types</option>
+        <option value="Income">Income</option>
+        <option value="Expense">Expense</option>
+        <option value="Share">Share</option>
+        <option value="MF">MF</option>
+        <option value="LIC">LIC</option>
+      </select>
+      <button class="btn-danger" onclick="deleteAll()">🗑 Delete All</button>
     </div>
   </div>
 
-  <!-- Upcoming Dues -->
   <div class="section">
-    <h2>⚠️ Upcoming Dues</h2>
+    <h2><span class="icon">📊</span> Monthly Snapshot</h2>
+    <div class="summary" id="summary"></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">⚠️</span> Upcoming Dues</h2>
     <div id="duesList"></div>
   </div>
 
-  <!-- Entries Table -->
   <div class="section">
-    <h2>📋 All Entries</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <h2><span class="icon">📋</span> All Entries</h2>
+      <span class="muted" id="entriesCount"></span>
+    </div>
     <div id="entries"></div>
   </div>
+</div>
 
-  <script>
-    let entries = JSON.parse(localStorage.getItem('financeEntries')) || [];
-    let dues = JSON.parse(localStorage.getItem('financeDues')) || [];
+<script>
+  let entries = JSON.parse(localStorage.getItem('financeEntries')) || [];
+  let dues = JSON.parse(localStorage.getItem('financeDues')) || [];
+  let editingId = null;
 
-    function saveData() {
-      localStorage.setItem('financeEntries', JSON.stringify(entries));
-      localStorage.setItem('financeDues', JSON.stringify(dues));
-    }
+  function saveData() {
+    localStorage.setItem('financeEntries', JSON.stringify(entries));
+    localStorage.setItem('financeDues', JSON.stringify(dues));
+  }
 
-    function addEntry() {
-      const date = document.getElementById('date').value;
-      const type = document.getElementById('type').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const desc = document.getElementById('desc').value;
-      if (!date || !type || !amount) return alert('Fill all fields');
+  function saveEntry() {
+    const date = document.getElementById('date').value;
+    const type = document.getElementById('type').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const desc = document.getElementById('desc').value;
+    if (!date || !type || !amount) return alert('Please fill Date, Type and Amount.');
+
+    if (editingId) {
+      entries = entries.map(e => e.id === editingId ? { ...e, date, type, amount, desc } : e);
+      editingId = null;
+    } else {
       entries.push({ id: Date.now(), date, type, amount, desc });
-      saveData();
-      document.getElementById('date').value = '';
-      document.getElementById('type').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('desc').value = '';
-      renderAll();
     }
 
-    function addDue() {
-      const desc = document.getElementById('dueDesc').value;
-      const date = document.getElementById('dueDate').value;
-      const amount = parseFloat(document.getElementById('dueAmount').value);
-      if (!desc || !date || !amount) return alert('Fill all fields');
-      dues.push({ id: Date.now(), desc, date, amount });
-      saveData();
-      document.getElementById('dueDesc').value = '';
-      document.getElementById('dueDate').value = '';
-      document.getElementById('dueAmount').value = '';
-      renderDues();
+    saveData();
+    document.getElementById('date').value = '';
+    document.getElementById('type').value = '';
+    document.getElementById('amount').value = '';
+    document.getElementById('desc').value = '';
+    renderAll();
+  }
+
+  function addDue() {
+    const desc = document.getElementById('dueDesc').value;
+    const date = document.getElementById('dueDate').value;
+    const amount = parseFloat(document.getElementById('dueAmount').value);
+    if (!desc || !date || !amount) return alert('Please fill all due fields.');
+    dues.push({ id: Date.now(), desc, date, amount });
+    saveData();
+    document.getElementById('dueDesc').value = '';
+    document.getElementById('dueDate').value = '';
+    document.getElementById('dueAmount').value = '';
+    renderDues();
+  }
+
+  function getMonthYear(d) { return d.slice(0,7); }
+
+  function filterEntries() {
+    const monthFilter = document.getElementById('monthFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    return entries.filter(e =>
+      (!monthFilter || getMonthYear(e.date) === monthFilter) &&
+      (!typeFilter || e.type === typeFilter)
+    );
+  }
+
+  function renderSummary(filtered) {
+    const income = filtered.filter(e => e.type === 'Income').reduce((sum, e) => sum + e.amount, 0);
+    const expense = filtered.filter(e => e.type === 'Expense').reduce((sum, e) => sum + e.amount, 0);
+    const investment = filtered.filter(e => ['Share','MF','LIC'].includes(e.type)).reduce((sum, e) => sum + e.amount, 0);
+    const balance = income - expense;
+    const balancePositive = balance >= 0;
+
+    document.getElementById('summary').innerHTML = `
+      <div class="stat">
+        <div class="stat-label">Income</div>
+        <div class="stat-value">₹${income.toLocaleString()}</div>
+        <div class="stat-tag">Cash In</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Expense</div>
+        <div class="stat-value">₹${expense.toLocaleString()}</div>
+        <div class="stat-tag negative">Cash Out</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Investments</div>
+        <div class="stat-value">₹${investment.toLocaleString()}</div>
+        <div class="stat-tag">Share • MF • LIC</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Balance</div>
+        <div class="stat-value">₹${balance.toLocaleString()}</div>
+        <div class="stat-tag ${balancePositive ? '' : 'negative'}">${balancePositive ? 'Surplus' : 'Deficit'}</div>
+      </div>
+    `;
+  }
+
+  function renderEntries(filtered) {
+    const countSpan = document.getElementById('entriesCount');
+    countSpan.textContent = filtered.length ? `${filtered.length} entries` : 'No entries';
+
+    if (!filtered.length) {
+      document.getElementById('entries').innerHTML = '<p class="empty-state">No entries for selected filters.</p>';
+      return;
     }
 
-    function getMonthYear(d) { return d.slice(0,7); }
+    let rows = '';
+    filtered.forEach(e => {
+      let chipClass = 'chip-invest';
+      if (e.type === 'Income') chipClass = 'chip-income';
+      else if (e.type === 'Expense') chipClass = 'chip-expense';
 
-    function filterEntries() {
-      const monthFilter = document.getElementById('monthFilter').value;
-      const typeFilter = document.getElementById('typeFilter').value;
-      return entries.filter(e => 
-        (!monthFilter || getMonthYear(e.date) === monthFilter) &&
-        (!typeFilter || e.type === typeFilter)
-      );
-    }
-
-    function renderSummary(filtered) {
-      const income = filtered.filter(e => e.type === 'Income').reduce((sum, e) => sum + e.amount, 0);
-      const expense = filtered.filter(e => e.type === 'Expense').reduce((sum, e) => sum + e.amount, 0);
-      const investment = filtered.filter(e => ['Share','MF','LIC'].includes(e.type)).reduce((sum, e) => sum + e.amount, 0);
-      const balance = income - expense;
-      document.getElementById('summary').innerHTML = `
-        <div class="stat">Income<br>₹${income.toLocaleString()}</div>
-        <div class="stat">Expense<br>₹${expense.toLocaleString()}</div>
-        <div class="stat">Invest<br>₹${investment.toLocaleString()}</div>
-        <div class="stat">Balance<br>₹${balance.toLocaleString()}</div>
+      rows += `
+        <tr>
+          <td>${new Date(e.date).toLocaleDateString('en-IN')}</td>
+          <td><span class="chip-type ${chipClass}">${e.type}</span></td>
+          <td>₹${e.amount.toLocaleString()}</td>
+          <td>${e.desc || '-'}</td>
+          <td>
+            <button class="btn-soft btn-xs" onclick="editEntry(${e.id})">Edit</button>
+            <button class="btn-danger btn-xs" onclick="deleteEntry(${e.id})">Delete</button>
+          </td>
+        </tr>
       `;
-    }
-
-    function renderEntries(filtered) {
-      let html = '';
-      filtered.forEach(e => {
-        html += `
-          <tr>
-            <td>${new Date(e.date).toLocaleDateString('hi-IN')}</td>
-            <td>${e.type}</td>
-            <td>₹${e.amount.toLocaleString()}</td>
-            <td>${e.desc}</td>
-            <td><button class="delete" onclick="deleteEntry(${e.id})">Delete</button></td>
-          </tr>
-        `;
-      });
-      document.getElementById('entries').innerHTML = filtered.length ? `<table><tr><th>Date</th><th>Type</th><th>Amount</th><th>Desc</th><th></th></tr>${html}</table>` : '<p>No entries</p>';
-    }
-
-    function renderDues() {
-      const today = new Date().toISOString().slice(0,10);
-      const upcoming = dues.filter(d => d.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
-      let html = upcoming.map(d => 
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:5px;">
-          <span>${d.desc} - ₹${d.amount.toLocaleString()} on ${new Date(d.date).toLocaleDateString('hi-IN')}</span>
-          <button class="delete" onclick="deleteDue(${d.id})">Delete</button>
-        </div>`
-      ).join('');
-      document.getElementById('duesList').innerHTML = upcoming.length ? html : '<p>No upcoming dues</p>';
-    }
-
-    function renderAll() {
-      const filtered = filterEntries();
-      renderSummary(filtered);
-      renderEntries(filtered);
-      populateFilters();
-    }
-
-    function populateFilters() {
-      const months = [...new Set(entries.map(getMonthYear))].sort().reverse();
-      const monthSel = document.getElementById('monthFilter');
-      monthSel.innerHTML = '<option value="">All Months</option>' + months.map(m => `<option value="${m}">${new Date(m+'-01').toLocaleDateString('hi-IN', {month:'long', year:'numeric'})}</option>`).join('');
-    }
-
-    function deleteEntry(id) {
-      entries = entries.filter(e => e.id !== id);
-      saveData();
-      renderAll();
-    }
-
-    function deleteDue(id) {
-      dues = dues.filter(d => d.id !== id);
-      saveData();
-      renderDues();
-    }
-
-    function deleteAll() {
-      if (confirm('Delete all data?')) {
-        entries = [];
-        dues = [];
-        saveData();
-        renderAll();
-        renderDues();
-      }
-    }
-
-    function exportCSV() {
-      const filtered = filterEntries();
-      const csv = 'Date,Type,Amount,Desc\n' + filtered.map(e => `${e.date},${e.type},${e.amount},"${e.desc}"`).join('\n');
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `finance-${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-    }
-
-    // Init
-    document.addEventListener('DOMContentLoaded', () => {
-      populateFilters();
-      renderAll();
-      renderDues();
     });
-  </script>
+
+    document.getElementById('entries').innerHTML = `
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function editEntry(id) {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    editingId = id;
+    document.getElementById('date').value = entry.date;
+    document.getElementById('type').value = entry.type;
+    document.getElementById('amount').value = entry.amount;
+    document.getElementById('desc').value = entry.desc || '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderDues() {
+    const today = new Date().toISOString().slice(0,10);
+    const upcoming = dues
+      .filter(d => d.date >= today)
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    if (!upcoming.length) {
+      document.getElementById('duesList').innerHTML = '<p class="empty-state">No upcoming dues.</p>';
+      return;
+    }
+
+    let html = '';
+    upcoming.forEach(d => {
+      html += `
+        <div class="due-card">
+          <div class="due-main">
+            <span class="due-desc">${d.desc}</span>
+            <span class="due-meta">
+              ₹${d.amount.toLocaleString()} • ${new Date(d.date).toLocaleDateString('en-IN')}
+            </span>
+          </div>
+          <button class="btn-danger btn-xs" onclick="deleteDue(${d.id})">Delete</button>
+        </div>
+      `;
+    });
+    document.getElementById('duesList').innerHTML = html;
+  }
+
+  function renderAll() {
+    const filtered = filterEntries();
+    renderSummary(filtered);
+    renderEntries(filtered);
+    populateFilters();
+  }
+
+  function populateFilters() {
+    const months = [...new Set(entries.map(getMonthYear))].filter(Boolean).sort().reverse();
+    const monthSel = document.getElementById('monthFilter');
+    const currentVal = monthSel.value;
+    monthSel.innerHTML = '<option value="">All Months</option>' +
+      months.map(m => {
+        const label = new Date(m+'-01').toLocaleDateString('en-IN', {month:'short', year:'numeric'});
+        return `<option value="${m}">${label}</option>`;
+      }).join('');
+    if (currentVal) monthSel.value = currentVal;
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    entries = entries.filter(e => e.id !== id);
+    saveData();
+    renderAll();
+  }
+
+  function deleteDue(id) {
+    if (!confirm('Delete this due?')) return;
+    dues = dues.filter(d => d.id !== id);
+    saveData();
+    renderDues();
+  }
+
+  function deleteAll() {
+    if (confirm('Delete all entries and dues?')) {
+      entries = [];
+      dues = [];
+      saveData();
+      renderAll();
+      renderDues();
+    }
+  }
+
+  function exportCSV() {
+    const filtered = filterEntries();
+    if (!filtered.length) return alert('No data to export for selected filters.');
+    const csv = 'Date,Type,Amount,Desc\n' +
+      filtered.map(e => `${e.date},${e.type},${e.amount},"${(e.desc || '').replace(/"/g,'""')}"`).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finance-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    document.getElementById('todayText').textContent =
+      today.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    const d = new Date().toISOString().slice(0,10);
+    document.getElementById('date').value = d;
+    document.getElementById('dueDate').value = d;
+    populateFilters();
+    renderAll();
+    renderDues();
+  });
+</script>
 </body>
 </html>
