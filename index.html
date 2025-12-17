@@ -286,6 +286,7 @@
         <option value="Share">Share Market</option>
         <option value="MF">Mutual Fund</option>
         <option value="LIC">LIC</option>
+        <option value="OtherInv">Other Investments</option>
       </select>
       <input type="number" id="amount" placeholder="Amount (₹)" required>
       <input type="text" id="desc" placeholder="Description">
@@ -318,6 +319,7 @@
         <option value="Share">Share</option>
         <option value="MF">MF</option>
         <option value="LIC">LIC</option>
+        <option value="OtherInv">Other Investments</option>
       </select>
       <button class="btn-danger" onclick="deleteAll()">🗑 Delete All</button>
     </div>
@@ -401,7 +403,9 @@
   function renderSummary(filtered) {
     const income = filtered.filter(e => e.type === 'Income').reduce((sum, e) => sum + e.amount, 0);
     const expense = filtered.filter(e => e.type === 'Expense').reduce((sum, e) => sum + e.amount, 0);
-    const investment = filtered.filter(e => ['Share','MF','LIC'].includes(e.type)).reduce((sum, e) => sum + e.amount, 0);
+    const investment = filtered
+      .filter(e => ['Share','MF','LIC','OtherInv'].includes(e.type))
+      .reduce((sum, e) => sum + e.amount, 0);
     const balance = income - expense;
     const balancePositive = balance >= 0;
 
@@ -419,7 +423,7 @@
       <div class="stat">
         <div class="stat-label">Investments</div>
         <div class="stat-value">₹${investment.toLocaleString()}</div>
-        <div class="stat-tag">Share • MF • LIC</div>
+        <div class="stat-tag">Share • MF • LIC • Other</div>
       </div>
       <div class="stat">
         <div class="stat-label">Balance</div>
@@ -444,10 +448,14 @@
       if (e.type === 'Income') chipClass = 'chip-income';
       else if (e.type === 'Expense') chipClass = 'chip-expense';
 
+      const typeLabel =
+        e.type === 'OtherInv' ? 'Other Investments' :
+        e.type;
+
       rows += `
         <tr>
           <td>${new Date(e.date).toLocaleDateString('en-IN')}</td>
-          <td><span class="chip-type ${chipClass}">${e.type}</span></td>
+          <td><span class="chip-type ${chipClass}">${typeLabel}</span></td>
           <td>₹${e.amount.toLocaleString()}</td>
           <td>${e.desc || '-'}</td>
           <td>
