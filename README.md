@@ -361,3 +361,252 @@ Yahi file repo me add karke commit/push karoge to GitHub pe achha professional R
       padding:6px 2px;
     }
   </style>
+
+
+<script>
+  let entries = JSON.parse(localStorage.getItem('financeEntries')) || [];
+  let dues = JSON.parse(localStorage.getItem('financeDues')) || [];
+  let editingId = null;
+
+  function saveData() {
+    localStorage.setItem('financeEntries', JSON.stringify(entries));
+    localStorage.setItem('financeDues', JSON.stringify(dues));
+  }
+
+  function saveEntry() {
+    const date = document.getElementById('date').value;
+    const type = document.getElementById('type').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const desc = document.getElementById('desc').value;
+    if (!date || !type || !amount) return alert('Please fill Date, Type and Amount.');
+
+    if (editingId) {
+      entries = entries.map(e => e.id === editingId ? { ...e, date, type, amount, desc } : e);
+      editingId = null;
+    } else {
+      entries.push({ id: Date.now(), date, type, amount, desc });
+    }
+
+    saveData();
+    document.getElementById('date').value = '';
+    document.getElementById('type').value = '';
+    document.getElementById('amount').value = '';
+    document.getElementById('desc').value = '';
+    renderAll();
+  }
+
+  function addDue() {
+    const desc = document.getElementById('dueDesc').value;
+    const date = document.getElementById('dueDate').value;
+    const amount = parseFloat(document.getElementById('dueAmount').value);
+    if (!desc || !date || !amount) return alert('Please fill all due fields.');
+    dues.push({ id: Date.now(), desc, date, amount });
+    saveData();
+    document.getElementById('dueDesc').value = '';
+    document.getElementById('dueDate').value = '';
+    document.getElementById('dueAmount').value = '';
+    renderDues();
+  }
+
+  function getMonthYear(d) { return d.slice(0,7); }
+
+  function filterEntries() {
+    const monthFilter = document.getElementById('monthFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    return entries.filter(e =>
+      (!monthFilter || getMonthYear(e.date) === monthFilter) &&
+      (!typeFilter || e.type === typeFilter)
+    );
+  }
+
+  function renderSummary(filtered) {
+    const income = filtered.filter(e => e.type === 'Income').reduce((sum, e) => sum + e.amount, 0);
+    const expense = filtered.filter(e => e.type === 'Expense').reduce((sum, e) => sum + e.amount, 0);
+    const investment = filtered
+      .filter(e => ['Share','MF','LIC','OtherInv'].includes(e.type))
+      .reduce((sum, e) => sum + e.amount, 0);
+    const balance = income - expense;
+    const balancePositive = balance >= 0;
+
+    document.getElementById('summary').innerHTML = `
+      <div class="stat">
+        <div class="stat-label">Income</div>
+        <div class="stat-value">₹${income.toLocaleString()}</div>
+        <div class="stat-tag">Cash In</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Expense</div>
+        <div class="stat-value">₹${expense.toLocaleString()}</div>
+        <div class="stat-tag negative">Cash Out</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Investments</div>
+        <div class="stat-value">₹${investment.toLocaleString()}</div>
+        <div class="stat-tag">Share • MF • LIC • Other</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Balance</div>
+        <div class="stat-value">₹${balance.toLocaleString()}</div>
+        <div class="stat-tag ${balancePositive ? '' : 'negative'}">${balancePositive ? 'Surplus' : 'Deficit'}</div>
+      </div>
+    `;
+  }
+
+  function renderEntries(filtered) {
+    const countSpan = document.getElementById('entriesCount');
+    countSpan.textContent = filtered.length ? `${filtered.length} entries` : 'No entries';
+
+    if (!filtered.length) {
+      document.getElementById('entries').innerHTML = '<p class="empty-state">No entries for selected filters.</p>';
+      return;
+    }
+
+    let rows = '';
+    filtered.forEach(e => {
+      let chipClass = 'chip-invest';
+      if (e.type === 'Income') chipClass = 'chip-income';
+      else if (e.type === 'Expense') chipClass = 'chip-expense';
+
+      const typeLabel =
+        e.type === 'OtherInv' ? 'Other Investments' :
+        e.type;
+
+      rows += `
+        <tr>
+          <td>${new Date(e.date).toLocaleDateString('en-IN')}</td>
+          <td><span class="chip-type ${chipClass}">${typeLabel}</span></td>
+          <td>₹${e.amount.toLocaleString()}</td>
+          <td>${e.desc || '-'}</td>
+          <td>
+            <button class="btn-soft btn-xs" onclick="editEntry(${e.id})">Edit</button>
+            <button class="btn-danger btn-xs" onclick="deleteEntry(${e.id})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    document.getElementById('entries').innerHTML = `
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function editEntry(id) {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    editingId = id;
+    document.getElementById('date').value = entry.date;
+    document.getElementById('type').value = entry.type;
+    document.getElementById('amount').value = entry.amount;
+    document.getElementById('desc').value = entry.desc || '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderDues() {
+    const today = new Date().toISOString().slice(0,10);
+    const upcoming = dues
+      .filter(d => d.date >= today)
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    if (!upcoming.length) {
+      document.getElementById('duesList').innerHTML = '<p class="empty-state">No upcoming dues.</p>';
+      return;
+    }
+
+    let html = '';
+    upcoming.forEach(d => {
+      html += `
+        <div class="due-card">
+          <div class="due-main">
+            <span class="due-desc">${d.desc}</span>
+            <span class="due-meta">
+              ₹${d.amount.toLocaleString()} • ${new Date(d.date).toLocaleDateString('en-IN')}
+            </span>
+          </div>
+          <button class="btn-danger btn-xs" onclick="deleteDue(${d.id})">Delete</button>
+        </div>
+      `;
+    });
+    document.getElementById('duesList').innerHTML = html;
+  }
+
+  function renderAll() {
+    const filtered = filterEntries();
+    renderSummary(filtered);
+    renderEntries(filtered);
+    populateFilters();
+  }
+
+  function populateFilters() {
+    const months = [...new Set(entries.map(getMonthYear))].filter(Boolean).sort().reverse();
+    const monthSel = document.getElementById('monthFilter');
+    const currentVal = monthSel.value;
+    monthSel.innerHTML = '<option value="">All Months</option>' +
+      months.map(m => {
+        const label = new Date(m+'-01').toLocaleDateString('en-IN', {month:'short', year:'numeric'});
+        return `<option value="${m}">${label}</option>`;
+      }).join('');
+    if (currentVal) monthSel.value = currentVal;
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    entries = entries.filter(e => e.id !== id);
+    saveData();
+    renderAll();
+  }
+
+  function deleteDue(id) {
+    if (!confirm('Delete this due?')) return;
+    dues = dues.filter(d => d.id !== id);
+    saveData();
+    renderDues();
+  }
+
+  function deleteAll() {
+    if (confirm('Delete all entries and dues?')) {
+      entries = [];
+      dues = [];
+      saveData();
+      renderAll();
+      renderDues();
+    }
+  }
+
+  function exportCSV() {
+    const filtered = filterEntries();
+    if (!filtered.length) return alert('No data to export for selected filters.');
+    const csv = 'Date,Type,Amount,Desc\n' +
+      filtered.map(e => `${e.date},${e.type},${e.amount},"${(e.desc || '').replace(/"/g,'""')}"`).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finance-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    document.getElementById('todayText').textContent =
+      today.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    const d = new Date().toISOString().slice(0,10);
+    document.getElementById('date').value = d;
+    document.getElementById('dueDate').value = d;
+    populateFilters();
+    renderAll();
+    renderDues();
+  });
+</script>
